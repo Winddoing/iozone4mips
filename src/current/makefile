@@ -9,12 +9,12 @@
 #		convex, FreeBSD, OpenBSD, OSFV3, OSFV4, OSFV5, SCO
 #		SCO_Unixware_gcc,NetBSD,TRU64, Mac OS X
 
-CC	= cc
+CC	= mips-linux-gnu-gcc
 C89	= c89
-GCC	= gcc
+GCC	= mips-linux-gnu-gcc
 CCS	= /usr/ccs/bin/cc
 NACC	= /opt/ansic/bin/cc
-CFLAGS	=
+CFLAGS	= 
 S10GCCFLAGS    = -m64
 S10CCFLAGS     = -m64
 FLAG64BIT      = -m64
@@ -51,6 +51,7 @@ all:
 	@echo "        ->   IRIX64               (64bit)   <-"
 	@echo "        ->   linux                (32bit)   <-"
 	@echo "        ->   linux-arm            (32bit)   <-"
+	@echo "        ->   linux-mips           (32bit)   <-"
 	@echo "        ->   linux-AMD64          (64bit)   <-"
 	@echo "        ->   linux-ia64           (64bit)   <-"
 	@echo "        ->   linux-powerpc        (32bit)   <-"
@@ -217,6 +218,15 @@ linux-arm:	iozone_linux-arm.o  libbif.o libasync.o fileop_linux-arm.o pit_server
 	$(CC) -O3 $(LDFLAGS) iozone_linux-arm.o libbif.o libasync.o \
 		-lrt -lpthread -o iozone
 	$(CC) -O3 -Dlinux fileop_linux-arm.o -o fileop
+	$(CC) -O3 -Dlinux pit_server.o -o pit_server
+
+#
+# GNU 'C' compiler Linux build with threads, largefiles, async I/O
+#
+linux-mips:	iozone_linux-mips.o  libbif.o libasync.o fileop_linux-mips.o pit_server.o
+	$(CC) -O3 $(LDFLAGS) iozone_linux-mips.o libbif.o libasync.o \
+		-lrt -lpthread -o iozone
+	$(CC) -O3 -Dlinux fileop_linux-mips.o -o fileop
 	$(CC) -O3 -Dlinux pit_server.o -o pit_server
 
 #
@@ -968,6 +978,12 @@ fileop_linux-arm.o:  fileop.c
 	@echo ""
 	$(GCC) -Wall -c -O3 $(CFLAGS) fileop.c -o fileop_linux-arm.o
 
+fileop_linux-mips.o:  fileop.c
+	@echo ""
+	@echo "Building fileop for Linux-mips"
+	@echo ""
+	$(GCC) -Wall -c -O3 $(CFLAGS) fileop.c -o fileop_linux-mips.o
+
 fileop_linux-s390.o:  fileop.c
 	@echo ""
 	@echo "Building fileop for Linux-S390"
@@ -1012,6 +1028,19 @@ iozone_linux-arm.o:	iozone.c libbif.c libasync.c
 		-DNAME='"linux-arm"' -DLINUX_ARM -DSHARED_MEM \
 		-Dlinux -D_LARGEFILE64_SOURCE $(CFLAGS) iozone.c \
 		-o iozone_linux-arm.o
+	$(CC) -c -O3 -Dunix -DHAVE_ANSIC_C -DASYNC_IO -D_LARGEFILE64_SOURCE \
+		-DSHARED_MEM -Dlinux $(CFLAGS) libbif.c -o libbif.o
+	$(CC) -c -O3 -Dunix -Dlinux -DHAVE_ANSIC_C -DASYNC_IO \
+		-D_LARGEFILE64_SOURCE $(CFLAGS) libasync.c  -o libasync.o
+
+iozone_linux-mips.o:	iozone.c libbif.c libasync.c
+	@echo ""
+	@echo "Building iozone for Linux-mips"
+	@echo ""
+	$(CC) -c -O3 -Dunix -DHAVE_ANSIC_C -DASYNC_IO -DHAVE_PREAD \
+		-DNAME='"linux-mips"' -DLINUX_ARM -DSHARED_MEM \
+		-Dlinux -D_LARGEFILE64_SOURCE $(CFLAGS) iozone.c \
+		-o iozone_linux-mips.o
 	$(CC) -c -O3 -Dunix -DHAVE_ANSIC_C -DASYNC_IO -D_LARGEFILE64_SOURCE \
 		-DSHARED_MEM -Dlinux $(CFLAGS) libbif.c -o libbif.o
 	$(CC) -c -O3 -Dunix -Dlinux -DHAVE_ANSIC_C -DASYNC_IO \
